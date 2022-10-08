@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from fileinput import filename
-from typing import Any
+from typing import Any, List
 
 
 import os
@@ -12,26 +12,27 @@ import configparser
 import datetime
 
 
-PLUGIN_CONF_FILE_NAME = 'plugin.config'
+PLUGIN_CONF_FILE_NAME = 'mescobrad_edge/plugins/edge_plugin_download/plugin.config'
 PLUGIN_CONF_MAIN_SECTION = 'plugin-configuration'
-PLUGIN_OUTPUT_FILE_DEST = './'
-PLUGIN_OUTPUT_FILE_NAME_FORMAT = '{plugin_name}-{timestamp}'
+PLUGIN_OUTPUT_FILE_DEST = '.'
+# PLUGIN_OUTPUT_FILE_NAME_FORMAT = '{plugin_name}-{timestamp}'
 
 @dataclass
-class PluginActionResponse(): 
+class PluginActionResponse():
     file_content_type: str = None
-    file_content: Any = None
+    file_content: List[Any] = None
+    file_name: List[str] = None
 
 @dataclass
-class PluginExchangeMetadata(): 
-    file_name: str = None
+class PluginExchangeMetadata():
+    file_name: List[str] = None
     file_content_type: str = None
-    file_size: int = None
-    created_on: str = None
+    file_size: List[int] = None
+    created_on: List[str] = None
 
 
 class EmptyPlugin():
-    
+
     def __init__(self):
         # Dynamically set plugin configuration
         config = configparser.ConfigParser()
@@ -71,41 +72,43 @@ class EmptyPlugin():
         with open(f"{PLUGIN_OUTPUT_FILE_DEST}/{input_file.file_name}", 'rb') as f:
             return f.read()
 
-    def __store__(self, output_file: PluginActionResponse) -> PluginExchangeMetadata:
-        created_on = str(datetime.datetime.now())
+    def __store__(self, output: PluginActionResponse) -> PluginExchangeMetadata:
+        file_sizes = []
+        files_created_on = []
+        file_names = []
+        for file_content, file_name in zip(output.file_content, output.file_name):
+            file_name = os.path.basename(file_name)
+            file_names.append(file_name)
+            files_created_on.append(str(datetime.datetime.now()).replace(":", "_"))
 
-        file_name = PLUGIN_OUTPUT_FILE_NAME_FORMAT\
-            .replace('{timestamp}', created_on)\
-            .replace('{plugin_name}', self.__class__.__name__)
+            # Create output file
+            with open(f"{PLUGIN_OUTPUT_FILE_DEST}/{file_name}", 'wb') as dest_file:
+                dest_file.write(file_content.encode() if type(file_content)==str else file_content)
 
-        # Create output file
-        with open(f"{PLUGIN_OUTPUT_FILE_DEST}/{file_name}", 'wb') as dest_file:
-            dest_file.write(output_file.file_content.encode() if type(output_file.file_content)==str else output_file.file_content)
-        
-        # Get its size
-        file_size = os.path.getsize(f"{PLUGIN_OUTPUT_FILE_DEST}/{file_name}")
+            # Get its size
+            file_sizes.append(os.path.getsize(f"{PLUGIN_OUTPUT_FILE_DEST}/{file_name}"))
 
         # Build Metadata
-        out_meta = PluginExchangeMetadata(file_name=file_name, 
-                                        file_content_type=output_file.file_content_type, 
-                                        file_size=file_size, 
-                                        created_on=created_on)
+        out_meta = PluginExchangeMetadata(file_name=file_names,
+                                          file_content_type=output.file_content_type,
+                                          file_size=file_sizes,
+                                          created_on=files_created_on)
 
         return out_meta
 
-    def action(self, data: any) -> PluginActionResponse:
+    def action(self, data: any) -> List[PluginActionResponse]:
         pass
 
     def __execute__(self, inputFileMetadata: PluginExchangeMetadata = None) -> PluginExchangeMetadata:
         self.__activate_venv__()
         # Execute plugin-specific action
         output = self.action(inputFileMetadata)
-        
-        if output is not None:
+
+        if output.file_content_type is not None and output.file_content is not None and output.file_name is not None:
             # Store the action output
-            outputFileMetadata = self.__store__(output)
+            outputFileMetadata = (self.__store__(output))
         else:
             # Create an empty exchange metadata
-            outputFileMetadata = PluginExchangeMetadata()
-        
+            outputFileMetadata = (PluginExchangeMetadata())
+
         return outputFileMetadata
