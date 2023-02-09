@@ -25,7 +25,7 @@ class GenericPlugin(EmptyPlugin):
                                   region_name=self.__OBJ_STORAGE_REGION__)
 
         # Compare buckets
-        bucket_local = s3_local.Bucket(self.__OBJ_STORAGE_BUCKET__)
+        bucket_local = s3_local.Bucket(self.__OBJ_STORAGE_BUCKET_LOCAL__)
         bucket = s3.Bucket(self.__OBJ_STORAGE_BUCKET__)
         obj_personal_data = bucket_local.objects.filter(Prefix="personal_data/", Delimiter="/")
         obj_anonymous_data = bucket.objects.filter(Prefix="anonymous_data/", Delimiter="/")
@@ -37,6 +37,6 @@ class GenericPlugin(EmptyPlugin):
         f = BytesIO()
         output = []
         for file_name in files_to_anonymize:
-            s3_local.Bucket(self.__OBJ_STORAGE_BUCKET__).download_fileobj(file_name, f)
+            s3_local.Bucket(self.__OBJ_STORAGE_BUCKET_LOCAL__).download_fileobj(file_name, f)
             output.append(f.getvalue().decode())
         return PluginActionResponse("text/plain", output, files_to_anonymize)
