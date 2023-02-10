@@ -34,9 +34,9 @@ class GenericPlugin(EmptyPlugin):
         files_to_anonymize = [obj.key for obj in obj_personal_data if os.path.basename(obj.key) not in keys_anonymous_data]
 
         # Download data
-        f = BytesIO()
         output = []
         for file_name in files_to_anonymize:
+            f = BytesIO()
             s3_local.Bucket(self.__OBJ_STORAGE_BUCKET_LOCAL__).download_fileobj(file_name, f)
             output.append(f.getvalue().decode())
         return PluginActionResponse("text/plain", output, files_to_anonymize)
