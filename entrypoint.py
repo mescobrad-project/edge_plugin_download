@@ -30,8 +30,9 @@ class GenericPlugin(EmptyPlugin):
         obj_personal_data = bucket_local.objects.filter(Prefix="personal_data/", Delimiter="/")
         obj_anonymous_data = bucket.objects.filter(Prefix="anonymous_data/", Delimiter="/")
 
-        keys_anonymous_data = [os.path.basename(obj.key) for obj in obj_anonymous_data]
-        files_to_anonymize = [obj.key for obj in obj_personal_data if os.path.basename(obj.key) not in keys_anonymous_data]
+        keys_anonymous_data = [os.path.splitext(os.path.basename(obj.key))[0] for obj in obj_anonymous_data]
+        files_to_anonymize = [obj.key for obj in obj_personal_data \
+                              if os.path.splitext(os.path.basename(obj.key))[0] not in keys_anonymous_data]
 
         # Download data
         output = []
