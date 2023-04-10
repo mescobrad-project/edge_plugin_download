@@ -9,7 +9,7 @@ import sys
 import subprocess
 import virtualenv
 import configparser
-import datetime
+import time
 
 
 PLUGIN_CONF_FILE_NAME = 'mescobrad_edge/plugins/edge_plugin_download/plugin.config'
@@ -79,7 +79,7 @@ class EmptyPlugin():
         for file_content, file_name in zip(output.file_content, output.file_name):
             file_name = os.path.basename(file_name)
             file_names.append(file_name)
-            files_created_on.append(str(datetime.datetime.now()).replace(":", "_"))
+            files_created_on.append(str(round(time.time()*1000)))
 
             # Create output file
             with open(f"{PLUGIN_OUTPUT_FILE_DEST}/{file_name}", 'wb') as dest_file:
