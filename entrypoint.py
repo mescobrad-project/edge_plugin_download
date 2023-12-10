@@ -25,6 +25,8 @@ class GenericPlugin(EmptyPlugin):
         output = []
         for file_name in files_to_anonymize:
             f = BytesIO()
-            s3_local.Bucket(self.__OBJ_STORAGE_BUCKET_LOCAL__).download_fileobj(file_name, f)
+            s3_local.Bucket(self.__OBJ_STORAGE_BUCKET_LOCAL__).download_fileobj(file_name,
+                                                                                f)
             output.append(f.getvalue().decode())
-        return PluginActionResponse("text/plain", output, files_to_anonymize)
+        return PluginActionResponse("text/plain", output, files_to_anonymize,
+                                    input_meta.workspace_id)
