@@ -29,4 +29,4 @@ class GenericPlugin(EmptyPlugin):
                                                                                 f)
             output.append(f.getvalue().decode())
         return PluginActionResponse("text/plain", output, files_to_anonymize,
-                                    input_meta.workspace_id)
+                                    input_meta.data_info)
